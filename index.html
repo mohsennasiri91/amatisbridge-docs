@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>مستندات فنی API — همگام‌ساز آماتیس پل (AmatisBridge)</title>
+
+    <!-- فونت وزیرمتن — با display=swap تا لود نشدن فونت صفحه را معطل نکند -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="assets/style.css" />
+  </head>
+  <body>
+    <!-- ==================== نوار بالا ==================== -->
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo">🔗</span>
+        <h1>مستندات API — همگام‌ساز آماتیس پل</h1>
+      </div>
+      <div class="meta">
+        <span class="badge">d: 0.1</span>
+        <span class="badge green">v: 0.1</span>
+        <button id="themeToggle" class="btn-icon" title="تغییر تم">🌓</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- ==================== ناوبری کناری ==================== -->
+      <aside class="sidebar">
+        <nav>
+          <h3>فهرست</h3>
+          <ul>
+            <li>
+              <a href="#overview">۱. نمای کلی</a>
+              <ul>
+                <li><a href="#architecture">معماری</a></li>
+                <li><a href="#base-url">آدرس پایه (Base URL)</a></li>
+                <li><a href="#request-templates">قالب درخواست‌ها</a></li>
+                <li><a href="#data-flow">جریان داده</a></li>
+                <li><a href="#glossary">واژه‌نامه</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#common">۲. اصول مشترک</a>
+              <ul>
+                <li><a href="#auth">احراز هویت</a></li>
+                <li><a href="#response-format">فرمت پاسخ</a></li>
+                <li><a href="#errors">مدیریت خطا</a></li>
+                <li><a href="#http-codes">کدهای وضعیت</a></li>
+                <li><a href="#versioning">نسخه‌بندی</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#push-endpoints">۳. Endpoint های ارسال (Push)</a>
+              <ul>
+                <li><a href="#push-products">محصولات</a></li>
+                <li><a href="#push-customers">مشتریان</a></li>
+                <li><a href="#push-orders">سفارش‌ها</a></li>
+                <li><a href="#push-invoices">فاکتورها</a></li>
+              </ul>
+            </li>
+            <li>
+              <a href="#pull-endpoints">۴. Endpoint های دریافت (Pull)</a>
+              <ul>
+                <li><a href="#pull-products">محصولات</a></li>
+                <li><a href="#pull-orders">سفارش‌ها</a></li>
+                <li><a href="#pull-inventory">موجودی</a></li>
+              </ul>
+            </li>
+            <li><a href="#field-mapping">۵. نگاشت فیلدها</a></li>
+            <li><a href="#app-config">۶. تنظیمات در نرم‌افزار</a></li>
+            <li><a href="#scenarios">۷. سناریوهای عملی</a></li>
+            <li>
+              <a href="#appendix">۸. پیوست‌ها</a>
+              <ul>
+                <li><a href="#changelog">تغییرات نسخه</a></li>
+                <li><a href="#faq">سؤالات متداول</a></li>
+              </ul>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- ==================== محتوای اصلی ==================== -->
+      <main class="content">
+        <!-- ---------- ۱. نمای کلی ---------- -->
+        <section id="overview">
+          <h2>۱. نمای کلی</h2>
+         <p>
+            این سند، چارچوب اتصال و تبادل داده از طریق
+            <strong>آماتیس پل (AmatisBridge)</strong> را توضیح می‌دهد. آماتیس پل
+            یک واسط یکپارچه‌سازی است که بین نرم‌افزار حسابداری یا منبع داده و
+            سامانه مقصد قرار می‌گیرد. این مستند اصول پیکربندی درخواست‌ها،
+            جهت حرکت داده، ساختارهای نمونه و نکاتی را شرح می‌دهد که هنگام اتصال
+            یک API باید مشخص شوند.
+            مسیرها، نام فیلدها و نمونه‌های این سند صرفاً نمونه‌اند؛ قرارداد واقعی
+            هر اتصال باید بر اساس API سامانه مقصد و تنظیمات همان اتصال تعیین شود.
+          </p>
+
+          <h3 id="architecture">معماری</h3>
+          <p>آماتیس پل واسطه‌ی تبادل داده است؛ ارتباط دو طرف به‌صورت زیر انجام می‌شود:</p>
+<ul>
+            <li>
+              <strong>از حسابداری به سرور مقصد:</strong> آماتیس پل اطلاعات را از
+              نرم‌افزار حسابداری یا منبع داده می‌گیرد، در صورت نیاز آن‌ها را به
+              ساختار مورد انتظار تبدیل می‌کند و درخواست مناسب را به API سرور مقصد
+              می‌فرستد.
+            </li>
+            <li>
+              <strong>از سرور مقصد به حسابداری:</strong> آماتیس پل اطلاعات را از
+              API سرور مقصد دریافت می‌کند و آن‌ها را به منبع حسابداری یا سامانه
+              متصل‌شده منتقل می‌کند؛ نحوه‌ی ثبت یا پردازش داده به اتصال و قابلیت‌های
+              منبع حسابداری بستگی دارد.
+            </li>
+          </ul>
+          <div class="callout">
+            <strong>نکته مهم:</strong> Push و Pull جهت تبادل داده را توصیف می‌کنند،
+            نه اینکه خود آماتیس پل یکی از دو سرور باشد. آماتیس پل در میانه‌ی مسیر
+            قرار دارد و درخواست‌ها و پاسخ‌ها از طریق آن مدیریت می‌شوند.
+          </div>
+          <img
+            class="diagram-img"
+            src="/assets/diagram.png"
+            alt="amatis bridge diagram"
+          />
+          <!-- ======== Base URL ======== -->
+          <h3 id="base-url">آدرس پایه (Base URL)</h3>
+          <p>
+            همه درخواست‌ها به یک <strong>آدرس پایه</strong> که آماتیس
+            پل با آن فعال شده ارسال می‌شوند. مسیر هر Endpoint به این آدرس الحاق
+            می‌شود.
+          </p>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th>مورد</th>
+                <th>مقدار نمونه</th>
+                <th>توضیح</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>base_url</code></td>
+                <td><code class="fl">https://api.example.com/api</code></td>
+                <td>
+                  آدرس پایه سرور مقصد؛ باید با <code>https</code> باشد (توصیه
+                  امنیتی)
+                </td>
+              </tr>
+              <tr>
+                <td><code>endpoint</code></td>
+                <td><code class="fl">/products</code></td>
+                <td>نسخه API که در مسیر قرار می‌گیرد</td>
+              </tr>
+              <tr>
+                <td>آدرس نهایی</td>
+                <td><code class="fl">{base_url}+{endpoint}</code><br>
+                    <code class="fl">https://api.example.com/api/products</code></td>
+                <td>ترکیب base_url + مسیر Endpoint</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="callout">
+            <strong>قاعده ساخت آدرس:</strong>
+            <code>endpoint</code>+<code>base_url</code><br />
+            مثال: <code>https://api.example.com/api</code> + <code>/products</code> →
+            <code>https://api.example.com/api/products</code>
+          </div>
+
+          <!-- <div class="callout warning">
+            <strong>نکته:</strong> اگر کاربر آدرس پایه را بدون
+            <code>https</code> یا با اسلش انتهایی وارد کند، آماتیس پل آن را
+            نرمال‌سازی می‌کند. سرور مقصد باید نسبت به اسلش انتهایی مسیرها حساس
+            نباشد یا مستندات را رعایت کند.
+          </div> -->
+
+          <!-- ======== قالب درخواست ======== -->
+          <h3 id="request-templates">قالب درخواست‌ها (Request Templates)</h3>
+          <p>
+            در آماتیس پل، برای هر عملیات یک
+            <strong>قالب (template)</strong> تعریف می‌شود. این قالب مشخص می‌کند:
+          </p>
+          <ul>
+            <li>
+              <strong>متد HTTP</strong> درخواست (GET، POST، PUT، PATCH، DELETE و
+              ...) — <em>کاملاً به‌صورت دلخواه در قالب تعریف می‌شود</em>.
+            </li>
+            <li>
+              <strong>مسیر (path)</strong> نسبت به <code>base_url</code> (مثلاً
+              <code>/api/v1/products</code>).
+            </li>
+            <li><strong>هدرها</strong> (احراز هویت، نوع محتوا و ...).</li>
+            <li><strong>ساختار بدنه (body)</strong> یا پارامترهای Query.</li>
+            <li><strong>نگاشت فیلدها</strong> از منبع داده به فیلدهای API.</li>
+          </ul>
+
+          <p>نمونه‌ای از تعریف یک قالب در آماتیس پل:</p>
+          <pre class="code"><code>{
+  "template_name": "send_products",
+  "base_url": "https://api.example.com/api",
+  "method": "POST",
+  "path": "/products",
+  "headers": {
+    "Authorization": "Bearer &lt;API_KEY&gt;",
+    "Content-Type": "application/json"
+  },
+  "body_template": {
+    "items": "{{products}}"
+  }
+}</code></pre>
+
+          <div class="callout">
+            <strong>مهم برای برنامه‌نویس سمت سرور:</strong>
+            متد HTTP توسط قالب تعیین می‌شود و از پیش ثابت نیست. اگر در مستندات
+            برای یک Endpoint متد <code>POST</code> پیشنهاد شده، سرور می‌تواند
+            متد دیگری (مثلاً <code>PUT</code>) را هم پشتیبانی کند؛ کافی است قالب
+            آماتیس پل مطابق آن تنظیم شود. توصیه می‌شود سرور برای هر Endpoint
+            حداقل متدهای منطقی (مثلاً <code>POST</code> و <code>PUT</code> برای
+            ارسال، <code>GET</code> برای دریافت) را پشتیبانی کند و در مستندات
+            خود اعلام کند.
+          </div>
+
+          <p>
+            به همین ترتیب، برای عملیات دریافت (Pull)، متد پیش‌فرض
+            <code>GET</code> است اما در صورت نیاز به دریافت شرطی یا ارسال
+            پارامترهای پیچیده، قالب می‌تواند <code>POST</code> با بدنه نیز تعریف
+            کند.
+          </p>
+
+          <h3 id="data-flow">جریان داده</h3>
+          <ol>
+            <li>
+              کاربر در آماتیس پل، <code>base_url</code>، کلید احراز هویت و
+              قالب‌ها را تنظیم می‌کند.
+            </li>
+            <li>
+              نرم‌افزار داده را از سرور حسابداری یا منبع داده مشابه می‌خواند و
+              به فرمت JSON تبدیل می‌کند.
+            </li>
+            <li>بر اساس قالب فعال، درخواست به Endpoint مقصد ارسال می‌شود.</li>
+            <li>پاسخ سرور (موفق/ناموفق) در لاگ آماتیس پل ثبت می‌شود.</li>
+          </ol>
+
+          <h3 id="glossary">واژه‌نامه</h3>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>اصطلاح</th>
+                <th>توضیح</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>AmatisBridge</td>
+                <td>نام لاتین همگام‌ساز آماتیس پل</td>
+              </tr>
+              <tr>
+                <td>base_url</td>
+                <td>آدرس پایه سرور مقصد که کاربر تنظیم می‌کند</td>
+              </tr>
+              <tr>
+                <td>Push</td>
+                <td>ارسال داده از نرم‌افزار به سرور</td>
+              </tr>
+              <tr>
+                <td>Pull</td>
+                <td>دریافت داده از سرور به نرم‌افزار</td>
+              </tr>
+              <tr>
+                <td>Endpoint</td>
+                <td>مسیر مشخص API روی سرور (نسبت به base_url)</td>
+              </tr>
+              <tr>
+                <td>Template / قالب</td>
+                <td>تعریف قابل‌ویرایش درخواست شامل متد، مسیر، هدر و بدنه</td>
+              </tr>
+              <tr>
+                <td>Payload</td>
+                <td>بدنه JSON ارسالی</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- ---------- ۲. اصول مشترک ---------- -->
+        <section id="common">
+          <h2>۲. اصول مشترک</h2>
+
+          <h3 id="auth">احراز هویت</h3>
+          <p>
+            همه درخواست‌ها باید شامل هدر احراز هویت باشند. این هدر در قالب
+            آماتیس پل تعریف و به‌صورت خودکار به هر درخواست اضافه می‌شود:
+          </p>
+          <pre class="code"><code>Authorization: Bearer &lt;API_KEY&gt;
+Content-Type: application/json
+Accept: application/json</code></pre>
+          <div class="callout warning">
+            <strong>نکته:</strong> در صورت نامعتبر بودن کلید، سرور باید کد
+            <code>401</code> برگرداند.
+          </div>
+
+          <h3 id="response-format">فرمت پاسخ استاندارد</h3>
+          <p>همه پاسخ‌ها باید ساختار یکسان داشته باشند:</p>
+          <pre class="code"><code>{
+  "success": true,
+  "StatusCode": 200,
+  "StatusDescription": "عملیات با موفقیت انجام شد"
+  "data": { ... },
+  "ErrorMessage": null
+}</code></pre>
+
+          <h3 id="http-codes">کدهای وضعیت HTTP</h3>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>کد</th>
+                <th>معنا</th>
+                <th>کاربرد</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>200</td>
+                <td>OK</td>
+                <td>دریافت موفق (GET) یا پردازش موفق</td>
+              </tr>
+              <tr>
+                <td>401</td>
+                <td>Unauthorized</td>
+                <td>کلید نامعتبر</td>
+              </tr>
+              <tr>
+                <td>403</td>
+                <td>Forbidden</td>
+                <td>مجوز لازم وجود ندارد</td>
+              </tr>
+              <tr>
+                <td>404</td>
+                <td>Not Found</td>
+                <td>منبع یافت نشد</td>
+              </tr>
+                <td>500</td>
+                <td>Server Error</td>
+                <td>خطای داخلی سرور</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 id="versioning">نسخه‌بندی</h3>
+          <p>
+            اگر API مقصد نسخه‌بندی دارد، نسخه را مطابق مستندات همان سامانه در
+            URL قرار دهید؛ برای نمونه <code>/api/v1/...</code>. این الگو برای
+            همه‌ی APIها اجباری نیست و آماتیس پل نباید بدون نیاز، مسیر نسخه را
+            به URL اضافه کند.
+          </p>
+        </section>
+
+        <!-- ---------- ۳. Endpoint های Push ---------- -->
+        <section id="push-endpoints">
+          <h2>۳. Endpoint های ارسال (Push)</h2>
+          <p class="callout">
+            متد HTTP هر Endpoint در این بخش، <strong>پیشنهاد</strong> است. متد
+            واقعی در قالب آماتیس پل تعیین می‌شود و می‌تواند متفاوت باشد. سرور
+            مقصد باید در مستندات خود متدهای پشتیبانی‌شده را مشخص کند.
+          </p>
+
+          <article class="endpoint" id="push-products">
+            <h3>۳.۱. ارسال محصولات</h3>
+            <div class="endpoint-line">
+              <span class="method post">POST</span>
+              <code class="path">{base_url}/api/v1/products</code>
+            </div>
+            <p>
+              آماتیس پل لیست محصولات را از سرور حسابداری یا منبع داده مشابه
+              خوانده و به این Endpoint ارسال می‌کند. متد واقعی توسط قالب
+              نرم‌افزار تعیین می‌شود (پیشنهاد: <code>POST</code> یا
+              <code>PUT</code>).
+            </p>
+
+            <h4>درخواست (Request)</h4>
+            <pre class="code"><code>POST {base_url}/api/v1/products
+Authorization: Bearer &lt;API_KEY&gt;
+Content-Type: application/json
+
+{
+  "mode": "immediate",
+  "create_if_not_exists": "true",
+  "products": [
+    {
+      "sku": "123",
+      "name": "محصول تست",
+      "price": 5000,
+      "stock": 4,
+      "discount": 1000
+    },
+    {
+      "sku": "456",
+      "name": "محصول تست 2",
+      "price": "5200",
+      "stock": "55",
+      "discount": null,
+      "post_meta": [
+        {
+          "meta_key": "unit",
+          "meta_value": "عدد"
+        }
+      ]
+    }
+  ]
+}</code></pre>
+
+            <h4>فیلدها</h4>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>فیلد</th>
+                  <th>نوع</th>
+                  <th>الزامی</th>
+                  <th>توضیح</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>sku</code></td>
+                  <td>string</td>
+                  <td>✅</td>
+                  <td>کد یکتای محصول</td>
+                </tr>
+                <tr>
+                  <td><code>name</code></td>
+                  <td>string</td>
+                  <td>✅</td>
+                  <td>نام محصول</td>
+                </tr>
+                <tr>
+                  <td><code>price</code></td>
+                  <td>number</td>
+                  <td>✅</td>
+                  <td>قیمت</td>
+                </tr>
+                <tr>
+                  <td><code>stock</code></td>
+                  <td>integer</td>
+                  <td>✅</td>
+                  <td>موجودی</td>
+                </tr>
+                <tr>
+                  <td><code>discount</code></td>
+                  <td>number - nullable</td>
+                  <td>❌</td>
+                  <td>زمان آخرین به‌روزرسانی</td>
+                </tr>
+                <tr>
+                  <td><code>post_meta</code></td>
+                  <td>array</td>
+                  <td>❌</td>
+                  <td>دیتای اضافی به صورت آرایه ای از کلید - مقدار</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>پاسخ موفق</h4>
+            <pre class="code"><code>{
+  "success": true,
+  "data": {
+    "mode": "immediate",
+    "total": 3,
+    "created": 1,
+    "updated": 2,
+    "failed": 0,
+    "results": []
+  }
+}</code></pre>
+          </article>
+
+        </section>
+
+        <!-- ---------- ۴. Endpoint های Pull ---------- -->
+        <section id="pull-endpoints">
+          <h2>۴. Endpoint های دریافت (Pull)</h2>
+          <p class="callout">
+            متد پیشنهادی برای دریافت، <code>GET</code> است؛ اما در صورت نیاز به
+            دریافت شرطی با بدنه (مثلاً لیست شروط پیچیده)، قالب آماتیس پل
+            می‌تواند <code>POST</code> تعریف کند. سرور مقصد باید متدهای
+            پشتیبانی‌شده هر Endpoint را اعلام کند.
+          </p>
+
+          <article class="endpoint" id="pull-products">
+            <h3>۴.۱. دریافت سفارش ها</h3>
+            <div class="endpoint-line">
+              <span class="method get">GET</span>
+              <code class="path"
+                >{base_url}/api/v1/orders?limit=20&status=pending&from=2026-10-20&to=2026-10-25&ignore_errored=true</code
+              >
+            </div>
+            <p>
+              آماتیس پل با این Endpoint لیست محصولات را می‌گیرد تا در سرور
+              حسابداری یا مقصد درج کند.
+            </p>
+
+            <h4>پارامترهای Query</h4>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>پارامتر</th>
+                  <th>نوع</th>
+                  <th>توضیح</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>limit</code></td>
+                  <td>int</td>
+                  <td>تعداد در صفحه</td>
+                </tr>
+                <tr>
+                  <td><code>status</code></td>
+                  <td>stirng</td>
+                  <td>وضعیت سفارش ها - چند وضعیت با "," از هم جدا میشوند.</td>
+                </tr>
+                <tr>
+                  <td><code>from</code></td>
+                  <td>string</td>
+                  <td>تاریخ قدیمی ترین سفارش</td>
+                </tr>
+                <tr>
+                  <td><code>to</code></td>
+                  <td>string</td>
+                  <td>تاریخ جدیدترین سفارش</td>
+                </tr>
+                <tr>
+                  <td><code>ignore_errored</code></td>
+                  <td>string</td>
+                  <td>نادیده گرفتن سفارشهایی که قبلا خطا داشته اند</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4>پاسخ موفق</h4>
+            <pre class="code"><code>{
+  "success": true,
+  "data": {
+    "orders": [
+      {
+        "id": 51,
+        "number": "51",
+        "status": "on-hold",
+        "date_created": "2026-09-13T13:18:19+00:00",
+        "date_modified": "2026-09-17T18:01:20+00:00",
+        "currency": "IRT",
+        "total": 69980000,
+        "discount_total": 0,
+        "shipping_total": 0,
+        "paid_total": 0,
+        "payment_method": "bacs",
+        "payment_method_title": "انتقال مستقیم بانکی",
+        "shipping_method": "نرخ ثابت",
+        "customer_note": "",
+        "customer": {
+          "id": 1,
+          "first_name": "محسن",
+          "last_name": "نصیری",
+          "phone": "09104717855",
+          "email": "mohsennasiri91@gmail.com"
+        },
+        "billing": {
+          "first_name": "محسن",
+          "last_name": "نصیری",
+          "company": "",
+          "address_1": "Saadi",
+          "address_2": "",
+          "city": "Qazvin",
+          "state": "GZN",
+          "postcode": "1234567891",
+          "country": "IR",
+          "phone": "09104717855",
+          "email": "mohsennasiri91@gmail.com"
+        },
+        "shipping": {
+          "first_name": "محسن",
+          "last_name": "نصیری",
+          "company": "",
+          "address_1": "Saadi",
+          "address_2": "",
+          "city": "Qazvin",
+          "state": "GZN",
+          "postcode": "1234567891",
+          "country": "IR"
+        },
+        "items": [
+          {
+            "id": 1,
+            "product_id": 15,
+            "variation_id": 0,
+            "sku": "123",
+            "name": "محصول تست",
+            "quantity": 1,
+            "subtotal": 29990000,
+            "subtotal_tax": 0,
+            "total": 29990000,
+            "total_tax": 0
+          },
+          {
+            "id": 2,
+            "product_id": 17,
+            "variation_id": 0,
+            "sku": "0101004",
+            "name": "اپليکيشن  اندرويدي پيشرفته با اتصال",
+            "quantity": 1,
+            "subtotal": 39990000,
+            "subtotal_tax": 0,
+            "total": 39990000,
+            "total_tax": 0
+          }
+        ]
+      },
+      {
+        "id": 53,
+        "number": "53",
+        "status": "on-hold",
+        "date_created": "2026-09-14T16:43:44+00:00",
+        "date_modified": "2026-10-19T20:03:13+00:00",
+        "currency": "IRT",
+        "total": 226686000,
+        "discount_total": 500000,
+        "shipping_total": 250000,
+        "paid_total": 0,
+        "payment_method": "bacs",
+        "payment_method_title": "انتقال مستقیم بانکی",
+        "shipping_method": "ارسال با پست",
+        "customer_note": "",
+        "customer": {
+          "id": 1,
+          "first_name": "محسن",
+          "last_name": "نصیری",
+          "phone": "09104717855",
+          "email": "mohsennasiri91@gmail.com"
+        },
+        "billing": {
+          "first_name": "محسن",
+          "last_name": "نصیری",
+          "company": "",
+          "address_1": "Saadi",
+          "address_2": "",
+          "city": "Qazvin",
+          "state": "GZN",
+          "postcode": "1234567891",
+          "country": "IR",
+          "phone": "09104717855",
+          "email": "mohsennasiri91@gmail.com"
+        },
+        "shipping": {
+          "first_name": "محسن",
+          "last_name": "نصیری",
+          "company": "",
+          "address_1": "Saadi",
+          "address_2": "",
+          "city": "Qazvin",
+          "state": "GZN",
+          "postcode": "1234567891",
+          "country": "IR"
+        },
+        "items": [
+          {
+            "id": 80,
+            "product_id": 36,
+            "variation_id": 0,
+            "sku": "0104003",
+            "name": "آپديت سايت و اپليکيشن",
+            "quantity": 1,
+            "subtotal": 5000000,
+            "subtotal_tax": 0,
+            "total": 4972222,
+            "total_tax": 0
+          }
+        ]
+      },
+      {
+        "id": 252,
+        "number": "252",
+        "status": "on-hold",
+        "date_created": "2026-10-05T16:29:03+00:00",
+        "date_modified": "2026-10-05T17:32:24+00:00",
+        "currency": "IRR",
+        "total": 1310750000,
+        "discount_total": 0,
+        "shipping_total": 250000,
+        "paid_total": 0,
+        "payment_method": "bacs",
+        "payment_method_title": "انتقال مستقیم بانکی",
+        "shipping_method": "ارسال با پست",
+        "customer_note": "",
+        "customer": {
+          "id": 0,
+          "first_name": "محسن",
+          "last_name": "نصیری",
+          "phone": null,
+          "email": "mohsennasiri91@gmail.com"
+        },
+        "billing": {
+          "first_name": "محسن",
+          "last_name": "نصیری",
+          "company": "",
+          "address_1": "Saadi",
+          "address_2": "",
+          "city": "Qazvin",
+          "state": "GZN",
+          "postcode": "1234567891",
+          "country": "IR",
+          "phone": null,
+          "email": "mohsennasiri91@gmail.com"
+        },
+        "shipping": {
+          "first_name": "محسن",
+          "last_name": "نصیری",
+          "company": "",
+          "address_1": "Saadi",
+          "address_2": "",
+          "city": "Qazvin",
+          "state": "GZN",
+          "postcode": "1234567891",
+          "country": "IR"
+        },
+        "items": [
+          {
+            "id": 136,
+            "product_id": 36,
+            "variation_id": 0,
+            "sku": "0104003",
+            "name": "آپديت سايت و اپليکيشن",
+            "quantity": 1,
+            "subtotal": 50000000,
+            "subtotal_tax": 0,
+            "total": 50000000,
+            "total_tax": 0
+          },
+          {
+            "id": 137,
+            "product_id": 17,
+            "variation_id": 0,
+            "sku": "0101004",
+            "name": "اپليکيشن  اندرويدي پيشرفته با اتصال",
+            "quantity": 1,
+            "subtotal": 399900000,
+            "subtotal_tax": 0,
+            "total": 399900000,
+            "total_tax": 0
+          }
+        ]
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 50,
+      "count": 7
+    }
+  }
+}</code></pre>
+          </article>
+
+      </main>
+    </div>
+
+    <footer class="footer">
+      <p>
+        © — مستندات فنی همگام‌ساز آماتیس پل (AmatisBridge) | آخرین به‌روزرسانی:
+        <span id="lastUpdate"></span>
+      </p>
+    </footer>
+
+    <script src="assets/app.js"></script>
+  </body>
+</html>
